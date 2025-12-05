@@ -42,5 +42,33 @@ def part1(parsed_data):
             count += 1
     return count
 
-def part2(data):
-    return "Not implemented"
+def part2(parsed_data):
+    ranges, _ = parsed_data
+    if not ranges:
+        return 0
+        
+    # Sort ranges by start
+    # Ensure they are inclusive [start, end]
+    sorted_ranges = sorted(ranges, key=lambda x: x[0])
+    
+    merged = []
+    current_start, current_end = sorted_ranges[0]
+    
+    for i in range(1, len(sorted_ranges)):
+        next_start, next_end = sorted_ranges[i]
+        
+        # Check overlap or adjacent
+        # adjacent: [1, 2] and [3, 4] -> next_start (3) == current_end (2) + 1
+        if next_start <= current_end + 1:
+            current_end = max(current_end, next_end)
+        else:
+            merged.append((current_start, current_end))
+            current_start, current_end = next_start, next_end
+            
+    merged.append((current_start, current_end))
+    
+    total_count = 0
+    for s, e in merged:
+        total_count += (e - s + 1)
+        
+    return total_count

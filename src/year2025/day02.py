@@ -26,5 +26,23 @@ def part1(data):
                 total_invalid_sum += num
     return total_invalid_sum
 
+def is_part2_invalid(num):
+    s = str(num)
+    n = len(s)
+    # Check all possible lengths for the repeating unit substring 'p'
+    # Length of p (d) must be a divisor of n, and d < n (so it repeats at least twice)
+    for d in range(1, n // 2 + 1):
+        if n % d == 0:
+            subtree = s[:d]
+            repeats = n // d
+            if subtree * repeats == s:
+                return True
+    return False
+
 def part2(data):
-    return "Not implemented"
+    total_invalid_sum = 0
+    for start, end in data:
+        for num in range(start, end + 1):
+            if is_part2_invalid(num):
+                total_invalid_sum += num
+    return total_invalid_sum

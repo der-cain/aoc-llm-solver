@@ -69,6 +69,19 @@ def submit_answer(year, day, part, answer):
         print("Status: WRONG Answer.")
     elif "You gave an answer too recently" in text:
         print("Status: RATE LIMITED. Please wait.")
+        # Parse wait time
+        import re
+        match = re.search(r"You have (?:(\d+)m )?(\d+)s left to wait", text)
+        if match:
+            minutes = int(match.group(1) or 0)
+            seconds = int(match.group(2))
+            wait_seconds = minutes * 60 + seconds
+            print(f"Waiting {wait_seconds} seconds...")
+            import time
+            time.sleep(wait_seconds + 5) # Add buffer
+            # Retry
+            print("Retrying...")
+            return submit_answer(year, day, part, answer)
     elif "You don't seem to be solving the right level" in text:
         print("Status: ALREADY SOLVED or invalid level.")
     else:

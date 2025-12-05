@@ -23,4 +23,24 @@ def part1(data):
     return count_zero
 
 def part2(data):
-    return "Not implemented"
+    current = 50
+    total_zeros = 0
+    
+    for instruction in data:
+        direction = instruction[0]
+        amount = int(instruction[1:])
+        
+        if direction == 'R':
+            next_val = current + amount
+            # Count multiples of 100 in (current, next_val]
+            count = (next_val // 100) - (current // 100)
+            total_zeros += count
+            current = next_val
+        elif direction == 'L':
+            next_val = current - amount
+            # Count multiples of 100 in [next_val, current)
+            count = ((current - 1) // 100) - ((next_val - 1) // 100)
+            total_zeros += count
+            current = next_val
+            
+    return total_zeros

@@ -29,5 +29,28 @@ def part1(grid):
                     accessible_count += 1
     return accessible_count
 
-def part2(data):
-    return "Not implemented"
+def part2(grid):
+    # Working copy of grid since we modify it
+    current_grid = [row[:] for row in grid]
+    rows = len(current_grid)
+    cols = len(current_grid[0]) if rows > 0 else 0
+    
+    total_removed = 0
+    
+    while True:
+        to_remove = []
+        for r in range(rows):
+            for c in range(cols):
+                if current_grid[r][c] == '@':
+                    neighbors = count_neighbors(current_grid, r, c, rows, cols)
+                    if neighbors < 4:
+                        to_remove.append((r, c))
+        
+        if not to_remove:
+            break
+            
+        total_removed += len(to_remove)
+        for r, c in to_remove:
+            current_grid[r][c] = '.' # Or 'x', effectively not '@'
+            
+    return total_removed
