@@ -25,8 +25,9 @@ class TestDay08(unittest.TestCase):
 425,690,689"""
 
     def test_part1_example(self):
-        self.assertEqual(part1(self.example_data), 40)
+        from src.year2025.day08 import parse
+        self.assertEqual(part1(parse(self.example_data)), 40)
 
     def test_part2_example(self):
-        # part2(self.example_data)
-        pass
+        from src.year2025.day08 import parse
+        self.assertEqual(part2(parse(self.example_data)), 25272)

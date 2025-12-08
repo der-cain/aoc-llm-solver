@@ -29,8 +29,7 @@ class DSU:
             return True
         return False
 
-def part1(data):
-    points = parse(data)
+def part1(points):
     n = len(points)
     pairs = []
     for i in range(n):
@@ -78,5 +77,25 @@ def part1(data):
 
     return sizes[0] * sizes[1] * sizes[2]
 
-def part2(data):
+def part2(points):
+    n = len(points)
+    pairs = []
+    for i in range(n):
+        for j in range(i + 1, n):
+            d2 = (points[i][0] - points[j][0])**2 + \
+                 (points[i][1] - points[j][1])**2 + \
+                 (points[i][2] - points[j][2])**2
+            pairs.append((d2, i, j))
+
+    # Sort by distance
+    pairs.sort(key=lambda x: x[0])
+
+    dsu = DSU(n)
+    components = n
+
+    for _, i, j in pairs:
+        if dsu.union(i, j):
+            components -= 1
+            if components == 1:
+                return points[i][0] * points[j][0]
     return None
