@@ -23,7 +23,7 @@ Advent of Code puzzles are unlocked sequentially.
 - **Do NOT** read input from the website text. Always use the `get_input` function which caches it to `inputs/`.
 
 ### Step 3: Implementation & Testing
-- The puzzles usually contain testing data which you can use to validate your solution.
+The puzzles usually contain testing data which you can use to validate your solution.
 - Create a new file `src/year<YEAR>/day<DAY>.py`.
 - Create a corresponding test file `src/year<YEAR>/test_day<DAY>.py`.
 - **Testing**: Run pytest:
