@@ -2,6 +2,8 @@
 import re
 import math
 from functools import reduce
+from fractions import Fraction
+import itertools
 
 def parse(data):
     """
@@ -167,44 +169,188 @@ def solve_machine_part1(target, buttons):
             
     return min_weight
 
-try:
-    from z3 import Optimize, Int, sat, Sum
-except ImportError:
-    Optimize = None
+def get_rank(matrix):
+    """
+    Computes rank of matrix using Gaussian Elimination.
+    """
+    m = len(matrix)
+    if m == 0: return 0
+    n = len(matrix[0])
+    
+    mat = [[Fraction(x) for x in row] for row in matrix]
+    
+    pivot_row = 0
+    for col in range(n):
+        if pivot_row >= m:
+            break
+        
+        # Find pivot
+        pr = -1
+        for r in range(pivot_row, m):
+            if mat[r][col] != 0:
+                pr = r
+                break
+        
+        if pr == -1:
+            continue
+            
+        mat[pivot_row], mat[pr] = mat[pr], mat[pivot_row]
+        
+        # Normalize/Eliminate not strictly needed for rank, just row echelon
+        # But let's do standard row reduction to be safe
+        pivot_val = mat[pivot_row][col]
+        for j in range(col, n):
+            mat[pivot_row][j] /= pivot_val
+            
+        for r in range(pivot_row + 1, m):
+            factor = mat[r][col]
+            if factor != 0:
+                for j in range(col, n):
+                    mat[r][j] -= factor * mat[pivot_row][j]
+                    
+        pivot_row += 1
+        
+    return pivot_row
+
+def solve_linear_system(matrix, target):
+    """
+    Solves Ax = b generally using Gauss-Jordan elimination.
+    matrix: m x k
+    target: m vector
+    Returns k vector of solution if consistent and unique (determined by pivots), else None.
+    """
+    m = len(matrix)
+    if m == 0: return []
+    k = len(matrix[0])
+    
+    mat = [[Fraction(x) for x in row] for row in matrix]
+    vec = [Fraction(x) for x in target]
+    
+    pivot_row = 0
+    pivots = [] # (row, col)
+    
+    for col in range(k):
+        if pivot_row >= m:
+            break
+            
+        # Find pivot
+        pr = -1
+        for r in range(pivot_row, m):
+            if mat[r][col] != 0:
+                pr = r
+                break
+        
+        if pr == -1:
+            continue
+            
+        # Swap
+        mat[pivot_row], mat[pr] = mat[pr], mat[pivot_row]
+        vec[pivot_row], vec[pr] = vec[pr], vec[pivot_row]
+        
+        # Normalize
+        pivot_val = mat[pivot_row][col]
+        for j in range(col, k):
+            mat[pivot_row][j] /= pivot_val
+        vec[pivot_row] /= pivot_val
+        
+        # Eliminate
+        for r in range(m):
+            if r != pivot_row:
+                factor = mat[r][col]
+                if factor != 0:
+                    for j in range(col, k):
+                        mat[r][j] -= factor * mat[pivot_row][j]
+                    vec[r] -= factor * vec[pivot_row]
+        
+        pivots.append((pivot_row, col))
+        pivot_row += 1
+
+    # Check consistency
+    for r in range(pivot_row, m):
+        if vec[r] != 0:
+            return None
+            
+    # If we don't have k pivots, we have free variables in this subsystem.
+    # Since we are iterating *potential bases*, we generally expect full rank here.
+    # If not full rank, it means the chosen columns are dependent.
+    # We can probably reject this subset as we want a basis.
+    if len(pivots) < k:
+        return None
+            
+    # Assemble solution
+    x = [Fraction(0)] * k
+    for r, c in pivots:
+        x[c] = vec[r]
+        
+    return x
 
 def solve_machine_part2(target, buttons):
     """
-    Solves Ax = b over Integers (non-negative) minimizing sum(x) using Z3.
+    Solves Ax = b over Integers (non-negative) minimizing sum(x) using analytical BFS.
     """
-    if Optimize is None:
-        return "Z3 not installed"
-        
-    num_items = len(target)
-    num_buttons = len(buttons)
+    m = len(target) # number of constraints (items)
+    n = len(buttons) # number of variables (buttons)
     
-    opt = Optimize()
-    presses = [Int(f'p_{i}') for i in range(num_buttons)]
-    
-    # Non-negative constraints
-    for p in presses:
-        opt.add(p >= 0)
+    # Check trivial case
+    if all(t == 0 for t in target):
+        return 0
         
-    # Equation constraints
-    # target[i] = sum(buttons[j][i] * presses[j])
-    for i in range(num_items):
-        equation = Sum([buttons[j][i] * presses[j] for j in range(num_buttons)]) == target[i]
-        opt.add(equation)
+    # Construct full matrix A (m x n)
+    # buttons[j] is column j
+    A = []
+    for r in range(m):
+        row = [buttons[c][r] for c in range(n)]
+        A.append(row)
         
-    # Minimize total presses
-    total_presses = Sum(presses)
-    opt.minimize(total_presses)
+    # Compute rank
+    rank = get_rank(A)
     
-    if opt.check() == sat:
-        model = opt.model()
-        min_presses = model.eval(total_presses).as_long()
-        return min_presses
-    else:
+    # If rank is 0 and target is not 0, impossible
+    if rank == 0:
         return float('inf')
+
+    min_presses = float('inf')
+    has_solution = False
+    
+    # Iterate all subsets of size 'rank'
+    # These are candidate bases.
+    for cols_indices in itertools.combinations(range(n), rank):
+        # Construct submatrix A_sub (m x rank)
+        sub_matrix = []
+        for r in range(m):
+            row = []
+            for c_idx in cols_indices:
+                row.append(buttons[c_idx][r])
+            sub_matrix.append(row)
+            
+        # Solve A_sub * x_sub = target
+        
+        sol = solve_linear_system(sub_matrix, target)
+        
+        if sol is None:
+            continue
+            
+        # Check validity
+        valid = True
+        current_sum = 0
+        
+        for val in sol:
+            if val.denominator != 1:
+                valid = False
+                break
+            if val < 0:
+                valid = False
+                break
+            current_sum += val.numerator
+            
+        if valid:
+            if current_sum < min_presses:
+                min_presses = current_sum
+                has_solution = True
+                
+    return min_presses if has_solution else float('inf')
+        
+
 
 def part1(data):
     # data is already parsed by main.py if parse function exists

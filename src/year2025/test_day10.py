@@ -43,6 +43,8 @@ def test_solve_machine_part2_3():
     min_presses = solve_machine_part2(joltage, buttons)
     assert min_presses == 11
 
+
+
 def test_part1():
     result = part1(EXAMPLE_INPUT)
     assert result == 7
