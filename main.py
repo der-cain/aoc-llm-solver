@@ -27,25 +27,31 @@ def run_day(year, day, part=None, submit=False):
             print(f"Error parsing input: {e}")
             return
 
-    if part is None or part == 1:
+    if hasattr(module, 'part1'):
         start_time = time.time()
         try:
             result = module.part1(data)
             print(f"Part 1: {result} (in {time.time() - start_time:.4f}s)")
             if submit and result is not None and result != "Not implemented":
                 submit_answer(year, day, 1, result)
-        except AttributeError:
-             print("Part 1 not implemented.")
+        except Exception as e:
+             print(f"Error executing Part 1: {e}")
+             import traceback; traceback.print_exc()
+    else:
+         print("Part 1 not implemented.")
 
-    if part is None or part == 2:
+    if hasattr(module, 'part2'):
         start_time = time.time()
         try:
             result = module.part2(data)
             print(f"Part 2: {result} (in {time.time() - start_time:.4f}s)")
             if submit and result is not None and result != "Not implemented":
                 submit_answer(year, day, 2, result)
-        except AttributeError:
-             print("Part 2 not implemented.")
+        except Exception as e:
+             print(f"Error executing Part 2: {e}")
+             import traceback; traceback.print_exc()
+    else:
+         print("Part 2 not implemented.")
 
 def main():
     parser = argparse.ArgumentParser(description="Advent of Code 2025 Solver")
