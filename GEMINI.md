@@ -13,7 +13,7 @@ Advent of Code puzzles are unlocked sequentially.
 ### Step 1: Read Problem Description
 - **Standardized Method**: Use the `fetch_puzzle.py` script. This handles authentication and fetching both parts (if available).
   ```bash
-  python fetch_puzzle.py --year <YEAR> --day <DAY> --output day<DAY>_desc.html
+  python fetch_puzzle.py --year <YEAR> --day <DAY> --output .puzzles/day<DAY>_desc.html
   ```
 - **Read Output**: Use `view_file` to read the generated HTML file.
 - **Failover**: If the script fails, fallback to `read_url_content` (note: Part 2 might be hidden).
@@ -42,7 +42,7 @@ The puzzles usually contain testing data which you can use to validate your solu
 
 ### Fetch Problem Description
 ```bash
-python fetch_puzzle.py --year <YEAR> --day <DAY> --output day<DAY>_desc.html
+python fetch_puzzle.py --year <YEAR> --day <DAY> --output .puzzles/day<DAY>_desc.html
 ```
 
 ### Verify Environment
